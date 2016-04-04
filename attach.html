@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="description" content="The attach command description and usage" />
+  <title>attach</title>
+  <style type="text/css">
+	  body {
+		  font-family: carlito;
+		  background-color: #8A90E7;
+		  color: black;
+		  }
+	  
+	  h1, h2, h3, h4, h5, h6 {
+		  font-family: carlito;
+		  }
+  </style>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="attach">attach</h1>
+<pre><code>Usage: docker attach [OPTIONS] CONTAINER
+
+Attach to a running container
+
+  --detach-keys=&quot;&lt;sequence&gt;&quot;       Set up escape key sequence
+  --help                           Print usage
+  --no-stdin                       Do not attach STDIN
+  --sig-proxy=true                 Proxy all received signals to the process</code></pre>
+<p>The <code>docker attach</code> command allows you to attach to a running container using the container's ID or name, either to view its ongoing output or to control it interactively. You can attach to the same contained process multiple times simultaneously, screen sharing style, or quickly view the progress of your detached process.</p>
+<p>To stop a container, use <code>CTRL-c</code>. This key sequence sends <code>SIGKILL</code> to the container. If <code>--sig-proxy</code> is true (the default),<code>CTRL-c</code> sends a <code>SIGINT</code> to the container. You can detach from a container and leave it running using the using <code>CTRL-p CTRL-q</code> key sequence.</p>
+<blockquote>
+<p><strong>Note:</strong> A process running as PID 1 inside a container is treated specially by Linux: it ignores any signal with the default action. So, the process will not terminate on <code>SIGINT</code> or <code>SIGTERM</code> unless it is coded to do so.</p>
+</blockquote>
+<p>It is forbidden to redirect the standard input of a <code>docker attach</code> command while attaching to a tty-enabled container (i.e.: launched with <code>-t</code>).</p>
+<h2 id="override-the-detach-sequence">Override the detach sequence</h2>
+<p>If you want, you can configure a override the Docker key sequence for detach. This is is useful if the Docker default sequence conflicts with key squence you use for other applications. There are two ways to defines a your own detach key sequence, as a per-container override or as a configuration property on your entire configuration.</p>
+<p>To override the sequence for an individual container, use the <code>--detach-keys=&quot;&lt;sequence&gt;&quot;</code> flag with the <code>docker attach</code> command. The format of the <code>&lt;sequence&gt;</code> is either a letter [a-Z], or the <code>ctrl-</code> combined with any of the following:</p>
+<ul>
+<li><code>a-z</code> (a single lowercase alpha character )</li>
+<li><code>@</code> (at sign)</li>
+<li><code>[</code> (left bracket)</li>
+<li><code>\\</code> (two backward slashes)</li>
+<li><code>_</code> (underscore)</li>
+<li><code>^</code> (caret)</li>
+</ul>
+<p>These <code>a</code>, <code>ctrl-a</code>, <code>X</code>, or <code>ctrl-\\</code> values are all examples of valid key sequences. To configure a different configuration default key sequence for all containers, see <a href="cli.md#configuration-files"><strong>Configuration file</strong> section</a>.</p>
+<h4 id="examples">Examples</h4>
+<pre><code>$ docker run -d --name topdemo ubuntu /usr/bin/top -b
+$ docker attach topdemo
+top - 02:05:52 up  3:05,  0 users,  load average: 0.01, 0.02, 0.05
+Tasks:   1 total,   1 running,   0 sleeping,   0 stopped,   0 zombie
+Cpu(s):  0.1%us,  0.2%sy,  0.0%ni, 99.7%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
+Mem:    373572k total,   355560k used,    18012k free,    27872k buffers
+Swap:   786428k total,        0k used,   786428k free,   221740k cached
+
+PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
+ 1 root      20   0 17200 1116  912 R    0  0.3   0:00.03 top
+
+ top - 02:05:55 up  3:05,  0 users,  load average: 0.01, 0.02, 0.05
+ Tasks:   1 total,   1 running,   0 sleeping,   0 stopped,   0 zombie
+ Cpu(s):  0.0%us,  0.2%sy,  0.0%ni, 99.8%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
+ Mem:    373572k total,   355244k used,    18328k free,    27872k buffers
+ Swap:   786428k total,        0k used,   786428k free,   221776k cached
+
+   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
+       1 root      20   0 17208 1144  932 R    0  0.3   0:00.03 top
+
+
+ top - 02:05:58 up  3:06,  0 users,  load average: 0.01, 0.02, 0.05
+ Tasks:   1 total,   1 running,   0 sleeping,   0 stopped,   0 zombie
+ Cpu(s):  0.2%us,  0.3%sy,  0.0%ni, 99.5%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
+ Mem:    373572k total,   355780k used,    17792k free,    27880k buffers
+ Swap:   786428k total,        0k used,   786428k free,   221776k cached
+
+ PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
+      1 root      20   0 17208 1144  932 R    0  0.3   0:00.03 top
+^C$
+$ echo $?
+0
+$ docker ps -a | grep topdemo
+7998ac8581f9        ubuntu:14.04        &quot;/usr/bin/top -b&quot;   38 seconds ago      Exited (0) 21 seconds ago                          topdemo</code></pre>
+<p>And in this second example, you can see the exit code returned by the <code>bash</code> process is returned by the <code>docker attach</code> command to its caller too:</p>
+<pre><code>$ docker run --name test -d -it debian
+275c44472aebd77c926d4527885bb09f2f6db21d878c75f0a1c212c03d3bcfab
+$ docker attach test
+$$ exit 13
+exit
+$ echo $?
+13
+$ docker ps -a | grep test
+275c44472aeb        debian:7            &quot;/bin/bash&quot;         26 seconds ago      Exited (13) 17 seconds ago                         test</code></pre>
+</body>
+</html>
